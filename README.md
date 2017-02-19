@@ -7,18 +7,24 @@ Helper tool for creating patch for a package and check whether it compiles, that
 
     Actions:
         mock_init        Initializes mock chroot from current branch name.
-        mock_pass        Run arbitrary mock command, options will be passed to the mock itself, so e.g. --shell gives an interactive console.
+        mock_pass        Run arbitrary mock command, options will be passed to the mock itself, so
+                         for example --shell gives an interactive console.
         mock_shell       Run an interactive console in the mock.
         mock_run         Run any command in the mock buildroot.
         section_build [ --show [ <num> ] | --from <num> | complete ]
-                         Without arguments it runs the %build section only. With --show option, user can see line numbers in %build section. With --from option, only part of the %build section can be run
+                         Without arguments it runs the %build section only. With --show option,
+                         user can see line numbers in %build section. With --from option, only
+                         part of the %build section can be run
         section_install [ --show [ <num> ] | --from <num> | complete ]
                          Similar semantics as section_build, just for %install section.
         section_files    Run the %files section only.
         run_check <test_script>
-                         Runs after-compile-check test, where user can check whatever is needed after compiling (%build section).
+                         Runs after-compile-check test, where user can check whatever is needed
+                         after compiling (%build section).
         run_check_output <test_script>
-                         Runs after-build-check test, where user can check whatever is needed after complete build. Script can expect RPM files and also unpacked RPM files in the current directory.
+                         Runs after-build-check test, where user can check whatever is needed after
+                         complete build. Script can expect RPM files and also unpacked RPM files
+                         in the current directory.
         update_spec      Copy locally changed SPEC to the mock buildroot.
         generate_patch   Get the changes in the source and store them into the <branch_name>.patch file.
 
