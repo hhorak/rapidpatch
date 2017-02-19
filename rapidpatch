@@ -73,14 +73,18 @@ mock_run() {
 }
 
 section_build() {
-  section_run build $@
+  [ "${1}" == 'complete' -o -z "${1}" ] && _run_build_section || _section_run build $@
 }
-  
+
 section_install() {
-  section_run install $@
+  [ "${1}" == 'complete' -o -z "${1}" ] && _run_install_section || _section_run install $@
 }
-  
-section_run() {
+
+section_files() {
+  _run_files_section $@
+}
+
+_section_run() {
   section=$1 ; shift
   cp ${THISDIR}/rpmdev-spec-sections ${RPMBUILD_ROOT}
   script=$(mock -q -r ${ROOT_NAME} --no-cleanup-after --no-clean --shell "/builddir/build/get_spec_section /builddir/build/SPECS/*.spec ${section} $*")
@@ -107,13 +111,18 @@ update_spec() {
   cp *.spec mock-sources/
 }
 
+# %build and beyond
+_run_build_section() {
+  mock -r ${ROOT_NAME} --no-cleanup-after --no-clean --shell 'rpmbuild -bc --short-circuit /builddir/build/SPECS/*.spec'
+}
+
 # %install and beyond
-run_install_section() {
+_run_install_section() {
   mock -r ${ROOT_NAME} --no-cleanup-after --no-clean --shell 'rpmbuild -bi --short-circuit /builddir/build/SPECS/*.spec'
 }
 
 # %files section
-run_files_section() {
+_run_files_section() {
   mock -r ${ROOT_NAME} --no-cleanup-after --no-clean --shell 'rpmbuild -bl --short-circuit /builddir/build/SPECS/*.spec'
 }
 
@@ -163,6 +172,10 @@ if ! [ -d ${RPMBUILD_ROOT}/BUILD ] && [ "$1" != "mock_init" ] ; then
   exit 1
 else
   # run function according to the argument
-  $@
+  case "${1}" in
+    mock_run|mock_shell|mock_pass|section_build|section_install|section_files) $@ ;;
+    run_check|update_spec|run_check_output|generate_patch) $@ ;;
+    *) usage ;;
+  esac
 fi
 

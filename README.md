@@ -10,11 +10,12 @@ Actions:
   mock_pass        Run arbitrary mock command, options will be passed to the mock itself, so e.g. --shell gives an interactive console.
   mock_shell       Run an interactive console in the mock.
   mock_run         Run any command in the mock buildroot.
-  section_build [ --show [ <num> ] ] [ --from <num> ]
+  section_build [ --show [ <num> ] | --from <num> | complete ]
                    Without arguments it runs the %build section only. With --show option, user can see line numbers in %build section. With --from
 option, only part of the %build section can be run
-  section_install [ --show [ <num> ] ] [ --from <num> ]
+  section_install [ --show [ <num> ] | --from <num> | complete ]
                    Similar semantics as section_build, just for %install section.
+  section_files    Run the %files section only.
   run_check <test_script>
                    Runs after-compile-check test, where user can check whatever is needed after compiling (%build section).
   run_check_output <test_script>
@@ -87,11 +88,11 @@ In case the the %install section fails, fix the problem in the the RPM spec or c
 
 We can also re-run the whole install section:
 
-    rapidpatch run_install_section
+    rapidpatch section_install complete
 
 In case there are some issues in the %files sections, fix them in the RPM spec and re-run the same command:
 
-    rapidpatch run_files_section
+    rapidpatch section_files
 
 After %install and %files sections finish, run the final check if required (for example when there was problem with RPM metadata):
 
