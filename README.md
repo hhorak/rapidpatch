@@ -5,30 +5,30 @@ rapidpatch: Tool to create RPM patch effectively
 
 Helper tool for creating patch for a package and check whether it compiles, that all with strong focus on effectivity. The tool generates a mock config, prepares directory for dependencies available only locally, allows to create patch from unpacked source easily. The tool also allows to run only specific section (or part of it) of the RPM Spec file, which makes the whole testing faster, especially in case of large projects, that compile long time. The tool also supports test-driven development, so ideally packager writes a simple test before writing the patch.
 
-Actions:
-  mock_init        Initializes mock chroot from current branch name.
-  mock_pass        Run arbitrary mock command, options will be passed to the mock itself, so e.g. --shell gives an interactive console.
-  mock_shell       Run an interactive console in the mock.
-  mock_run         Run any command in the mock buildroot.
-  section_build [ --show [ <num> ] | --from <num> | complete ]
-                   Without arguments it runs the %build section only. With --show option, user can see line numbers in %build section. With --from
+    Actions:
+        mock_init        Initializes mock chroot from current branch name.
+        mock_pass        Run arbitrary mock command, options will be passed to the mock itself, so e.g. --shell gives an interactive console.
+        mock_shell       Run an interactive console in the mock.
+        mock_run         Run any command in the mock buildroot.
+        section_build [ --show [ <num> ] | --from <num> | complete ]
+                         Without arguments it runs the %build section only. With --show option, user can see line numbers in %build section. With --from
 option, only part of the %build section can be run
-  section_install [ --show [ <num> ] | --from <num> | complete ]
-                   Similar semantics as section_build, just for %install section.
-  section_files    Run the %files section only.
-  run_check <test_script>
-                   Runs after-compile-check test, where user can check whatever is needed after compiling (%build section).
-  run_check_output <test_script>
-                   Runs after-build-check test, where user can check whatever is needed after complete build. Script can expect RPM files and also unpacked RPM files in the current directory.
-  update_spec      Copy locally changed SPEC to the mock buildroot.
-  generate_patch   Get the changes in the source and store them into the <branch_name>.patch file.
+        section_install [ --show [ <num> ] | --from <num> | complete ]
+                         Similar semantics as section_build, just for %install section.
+        section_files    Run the %files section only.
+        run_check <test_script>
+                         Runs after-compile-check test, where user can check whatever is needed after compiling (%build section).
+        run_check_output <test_script>
+                         Runs after-build-check test, where user can check whatever is needed after complete build. Script can expect RPM files and also unpacked RPM files in the current directory.
+        update_spec      Copy locally changed SPEC to the mock buildroot.
+        generate_patch   Get the changes in the source and store them into the <branch_name>.patch file.
 
-Example:
+## Example:
 
-This example shows how to use this tool for package mariadb, which takes long to compile:
+This following example shows how to use this tool for package mariadb, which takes long to compile:
 
 
-## Initializing the mock environment and writing the reproducer
+### Initializing the mock environment and writing the reproducer
 
 Start with cloning the package as usually, using fedpkg. Create a private branch for this issue.
     
@@ -54,7 +54,7 @@ After a test is written, we can initialize the mock and try build the package:
 We should see test failure, if not, write the test, so it fails when the issue is not fixed.
 
 
-## Fixing the code of the component
+### Fixing the code of the component
 
 Now, we can change either RPM spec or code in local directory (it is a symlink to the mock directory), both in local directory:
 
@@ -80,7 +80,7 @@ After %build section passes, we can continue with %install section
     rapidpatch section_install
 
 
-## Fixing the %install and %files sections in the RPM spec
+### Fixing the %install and %files sections in the RPM spec
 
 In case the the %install section fails, fix the problem in the the RPM spec or code, still in local directory; then run the %install again (we can continue from some line as well):
 
