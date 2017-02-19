@@ -11,8 +11,7 @@ Helper tool for creating patch for a package and check whether it compiles, that
         mock_shell       Run an interactive console in the mock.
         mock_run         Run any command in the mock buildroot.
         section_build [ --show [ <num> ] | --from <num> | complete ]
-                         Without arguments it runs the %build section only. With --show option, user can see line numbers in %build section. With --from
-option, only part of the %build section can be run
+                         Without arguments it runs the %build section only. With --show option, user can see line numbers in %build section. With --from option, only part of the %build section can be run
         section_install [ --show [ <num> ] | --from <num> | complete ]
                          Similar semantics as section_build, just for %install section.
         section_files    Run the %files section only.
