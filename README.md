@@ -1,4 +1,7 @@
-Usage: rapidpatch action [ params ]
+rapidpatch: Tool to create RPM patch effectively
+================================================
+
+    Usage: rapidpatch action [ params ]
 
 Helper tool for creating patch for a package and check whether it compiles, that all with strong focus on effectivity. The tool generates a mock config, prepares directory for dependencies available only locally, allows to create patch from unpacked source easily. The tool also allows to run only specific section (or part of it) of the RPM Spec file, which makes the whole testing faster, especially in case of large projects, that compile long time. The tool also supports test-driven development, so ideally packager writes a simple test before writing the patch.
 
