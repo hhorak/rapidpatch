@@ -1,0 +1,168 @@
+#!/bin/bash
+#
+# Helper tool for creating patch for a package and check whether it compiles, that all with strong focus on effectivity.
+
+THISDIR=$(dirname ${BASH_SOURCE[0]})
+
+set -e
+
+TOPIC_NAME=${TOPIC_NAME:-`git rev-parse --abbrev-ref HEAD`}
+DIST_VERSION=25
+ROOT_NAME=${TOPIC_NAME}-${DIST_VERSION}-x86_64
+LOCAL_REPO=/var/tmp/${ROOT_NAME}
+RPMBUILD_ROOT=/var/lib/mock/${ROOT_NAME}/root/builddir/build
+
+usage() {
+  prog_name=`basename $0`
+  cat ${THISDIR}/README.md
+  exit 1
+}
+
+
+# Create /etc/mock/${ROOT_NAME}.cfg
+# - change chroot
+# - add local repo at file:///var/tmp/${ROOT_NAME}/
+# - add dnf into buildroot
+mock_init() {
+  echo "About to generate new mock config for ${TOPIC_NAME} ..."
+  echo -n "Are you OK with (re)creating /etc/mock/${ROOT_NAME}.cfg? (Y/N): "
+  read answer ; [[ "${answer}" =~ ^[yY] ]] || return 1
+  sudo -A sh -c "sed -e 's/__DIST_VERSION__/${DIST_VERSION}/g' -e 's/__ROOT_NAME__/${ROOT_NAME}/g' ${THISDIR}/template-rapidpatch-x86_64.cfg >/etc/mock/${ROOT_NAME}.cfg"
+
+  echo "About to create local repo ${LOCAL_REPO} to store local rpms for development ..."
+  mkdir -p ${LOCAL_REPO}
+  if [ -d "${LOCAL_REPO}" ] ; then
+    echo -n "Directory ${LOCAL_REPO} exists, are you OK with deletting the content? (Y/N): "
+    read answer ; [[ "${answer}" =~ ^[yY] ]] && rm -f ${LOCAL_REPO}/*rpm
+  fi
+  createrepo_c ${LOCAL_REPO}
+  mock -r ${ROOT_NAME} --init
+  srpm=$(fedpkg --release f${DIST_VERSION} srpm | grep ^Wrote | sed -e 's/^Wrote: //')
+
+  # it is fine if the rebuild fails
+  mock -r ${ROOT_NAME} --no-cleanup-after --no-clean --rebuild ${srpm} || :
+  spec=$(ls *.spec | head -n 1)
+  SOURCE_DIR_NAME=$(ls ${RPMBUILD_ROOT}/BUILD/ | head -n 1)
+  ln -sf ${RPMBUILD_ROOT}/BUILD/${SOURCE_DIR_NAME} .
+
+  pushd ${SOURCE_DIR_NAME}
+  git init
+  touch .gitignore
+  echo "debuglinks.list" >>.gitignore
+  echo "debugfiles.list" >>.gitignore
+  git add .
+  git commit -m 'Initial commit'
+  popd
+
+  ln -sf ${RPMBUILD_ROOT}/SOURCES mock-sources
+  ln -sf ../SPECS/${spec} ${RPMBUILD_ROOT}/SOURCES/${spec}
+  echo "Initialization succeeded."
+  echo "Edit the sources in ${SOURCE_DIR_NAME} and then run `basename $0` compile_run"
+}
+
+# NOTE: THIS FUNC IS NOT USED NOW
+# return name of the directory where the sources in BUILD 
+get_unpacked_source_dir() {
+  setup_macro=$(rpmspec -P ${1} | grep -e '^%setup.*\s*-n\s*' | sed -e 's/^%setup.*\s*-n\s*\(\S*\).*$/\1/')
+  [ -n "${setup_macro}" ] && echo "${setup_macro}" || rpmspec -q --srpm --qf '%{name}-%{version}' ${1}
+}
+
+# we can run make alone to not build all
+mock_run() {
+  mock -r ${ROOT_NAME} --no-cleanup-after --no-clean --shell "cd /builddir/build/BUILD/${SOURCE_DIR_NAME}/ && ${1:-bash}"
+}
+
+section_build() {
+  section_run build $@
+}
+  
+section_install() {
+  section_run install $@
+}
+  
+section_run() {
+  section=$1 ; shift
+  cp ${THISDIR}/rpmdev-spec-sections ${RPMBUILD_ROOT}
+  script=$(mock -q -r ${ROOT_NAME} --no-cleanup-after --no-clean --shell "/builddir/build/get_spec_section /builddir/build/SPECS/*.spec ${section} $*")
+  echo "cd /builddir/build/BUILD/${SOURCE_DIR_NAME}/" >${RPMBUILD_ROOT}/${section}
+  echo "set -xe" >>${RPMBUILD_ROOT}/${section}
+  echo "${script}" >>${RPMBUILD_ROOT}/${section}
+  if [ "${1}" == 'show' -o "${1}" == '--show' ] ; then
+    cat "${RPMBUILD_ROOT}/${section}"
+  else
+    mock -r ${ROOT_NAME} --no-cleanup-after --no-clean --chroot "bash /builddir/build/${section}"
+  fi
+}
+
+run_check() {
+  test_file="${1}" ; shift
+  test_dir="${1:-/builddir/build/BUILD/${SOURCE_DIR_NAME}/}"
+  mkdir -p ${RPMBUILD_ROOT}/CHECKS/
+  cp ./${test_file} ${RPMBUILD_ROOT}/CHECKS/
+  mock -r ${ROOT_NAME} --no-cleanup-after --no-clean --shell "set -xe ; cd ${test_dir} && /builddir/build/CHECKS/${test_file}"
+}
+
+# copies spec to the mock sources
+update_spec() {
+  cp *.spec mock-sources/
+}
+
+# %install and beyond
+run_install_section() {
+  mock -r ${ROOT_NAME} --no-cleanup-after --no-clean --shell 'rpmbuild -bi --short-circuit /builddir/build/SPECS/*.spec'
+}
+
+# %files section
+run_files_section() {
+  mock -r ${ROOT_NAME} --no-cleanup-after --no-clean --shell 'rpmbuild -bl --short-circuit /builddir/build/SPECS/*.spec'
+}
+
+# check whether packages are installed
+run_check_output() {
+  mock -r ${ROOT_NAME} --no-cleanup-after --no-clean --shell 'dnf install /builddir/build/RPMS/*.rpm' 
+
+  pushd ${RPMBUILD_ROOT}/RPMS/
+  rm -rf ./*/
+  rpmdev-extract ${RPMBUILD_ROOT}/RPMS/*.rpm
+  popd
+
+  run_check "${1}" "/builddir/build/RPMS/"
+}
+
+mock_shell() {
+  mock -r ${ROOT_NAME} --no-cleanup-after --no-clean --shell
+}
+
+mock_pass() {
+  [ -z "$1" ] && echo "Argument needs to be given." && return 1
+  mock -r ${ROOT_NAME} --no-cleanup-after --no-clean $@
+}
+
+# generate patch from unpacked source
+generate_patch() {
+  outputdir=$(pwd)
+  pushd ${SOURCE_DIR_NAME}
+  git diff >${outputdir}/${TOPIC_NAME}.patch
+  popd
+  echo "Patch created as ${TOPIC_NAME}.patch"
+}
+
+# print usage
+[ -z "${1}" -o "${1}" == "-h" -o "${1}" == "--help" ] && usage
+
+# in case the mock is already initialized, get the build directory and safe the patch for the case we loose the environment
+if [ -d ${RPMBUILD_ROOT}/BUILD ] ; then
+  SOURCE_DIR_NAME=$(ls ${RPMBUILD_ROOT}/BUILD/ | head -n 1)
+  generate_patch
+  update_spec
+fi
+
+# user wants to do something, but the mock is not initialized yet
+if ! [ -d ${RPMBUILD_ROOT}/BUILD ] && [ "$1" != "mock_init" ] ; then
+  echo "mock not initialized. Run `basename $0` mock_init first."
+  exit 1
+else
+  # run function according to the argument
+  $@
+fi
+

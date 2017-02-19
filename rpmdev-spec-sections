@@ -1,0 +1,37 @@
+#!/bin/bash
+# reads input from stdin and returns required section given as argument
+# @param spec_file
+# @param section_wanted
+# @param action show-pure | show-from-line | show-with-lines
+# @param (optional) line number
+get_spec_section() {
+  [ -z "${1}" ] && echo "Usage: get_spec_section <specfile> <build|install> <show|show-pure> [line_number]" && return 1
+  specfile=${1} ; shift
+  section_wanted=${1} ; shift
+  action=${1:-show-pure} ; shift
+  start_with_line=${1:-0} ; shift
+  section_actual=nothing
+  ln=0
+  while read line ; do
+    case "${line}" in
+      %build*)
+        section_actual=build
+        ;;
+      %install*)
+        section_actual=install
+        ;;
+      %description*|%package*|%prep*|%files*|%changelog*|%pre*|%post*|%trigger*)
+        section_actual=ignore
+        ;;
+      *)
+        if [ "${section_actual}" == "${section_wanted}" ] ; then
+          ((ln++))
+          [ "${action}" == "show" -o "${action}" == "--show" ] && line="${ln}: ${line}"
+          [ "${ln}" -ge "0${start_with_line}" ] && echo "${line}"
+        fi
+        ;;
+    esac
+  done < <(rpmspec -P ${specfile})
+}
+
+get_spec_section $@
