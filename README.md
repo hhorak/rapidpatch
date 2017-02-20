@@ -29,6 +29,8 @@ Helper tool for creating patch for a package and check whether it compiles, that
         generate_patch   Get the changes in the source and store them into the <branch_name>.patch file.
         get_mock_config  Shows which mock config file name the tool works with.
         show_mock_config Shows mock config content the tool works with.
+        get_local_repo   Shows which local repository the tool works with, local repository is the
+                         repository users can put RPMs that are meant to be available in the buildroot.
 
 ## Example:
 

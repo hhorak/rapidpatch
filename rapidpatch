@@ -171,14 +171,15 @@ get_mock_config() {
   echo "/etc/mock/${ROOT_NAME}.cfg"
 }
 
+get_local_repo() {
+  echo "${LOCAL_REPO}"
+}
+
 # print usage
 [ -z "${1}" -o "${1}" == "-h" -o "${1}" == "--help" ] && usage
 
-# in case the mock is already initialized, get the build directory and safe the patch for the case we loose the environment
 if [ -d ${RPMBUILD_ROOT}/BUILD ] ; then
   SOURCE_DIR_NAME=$(ls ${RPMBUILD_ROOT}/BUILD/ | head -n 1)
-  generate_patch
-  update_spec
 fi
 
 # user wants to do something, but the mock is not initialized yet
@@ -188,8 +189,19 @@ if ! [ -d ${RPMBUILD_ROOT}/BUILD ] && [ "$1" != "mock_init" ] ; then
 else
   # run function according to the argument
   case "${1}" in
-    mock_run|mock_shell|mock_pass|section_build|section_install|section_files) $@ ;;
-    run_check|update_spec|run_check_output|generate_patch|get_mock_config|show_mock_config) $@ ;;
+    mock_init)
+      $@
+      ;;
+    mock_run|mock_shell|mock_pass|section_build|section_install|section_files|run_check_output)
+      # in case the mock is already initialized, get the build directory
+      # and safe the patch for the case we loose the environment
+      generate_patch
+      update_spec
+      $@
+      ;;
+    run_check|update_spec|generate_patch|get_mock_config|get_local_repo|show_mock_config)
+      $@
+      ;;
     *) usage ;;
   esac
 fi
