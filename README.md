@@ -112,3 +112,8 @@ Now we can generate the patch and continue as usually
     rapidpatch generate_patch
     git add *.patch
     git commit -a -m 'Some message'
+
+
+## Contributions
+
+Project lives in [https://github.com/hhorak/rapidpatch](https://github.com/hhorak/rapidpatch) and RPMs are available in [https://copr.fedorainfracloud.org/coprs/hhorak/rapidpatch/](https://copr.fedorainfracloud.org/coprs/hhorak/rapidpatch/).
