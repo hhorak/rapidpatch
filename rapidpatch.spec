@@ -1,6 +1,6 @@
 Name:		rapidpatch
 Version:	0.1
-Release:	2%{?dist}
+Release:	3%{?dist}
 Summary:	 Tools to make creating patch faster 
 
 Group:		Development/Tools
@@ -15,6 +15,7 @@ Source4:	template-rapidpatch-x86_64.cfg
 BuildArch:	noarch
 
 Requires:	mock
+Requires:	rpmdevtools
 
 %description
 Helper tool for creating patch for a package and check whether it compiles,
@@ -47,5 +48,8 @@ cp template-rapidpatch-x86_64.cfg %{buildroot}%{_datadir}/%{name}
 %{_datadir}/%{name}
 
 %changelog
+* Mon Feb 20 2017 Honza Horak <hhorak@redhat.com> - 0.1-3
+- Fix few packaging issues
+
 * Sun Feb 19 2017 Honza Horak <hhorak@redhat.com> - 0.1-2
 - Initial packaging

@@ -11,10 +11,17 @@ DIST_VERSION=25
 ROOT_NAME=${TOPIC_NAME}-${DIST_VERSION}-x86_64
 LOCAL_REPO=/var/tmp/${ROOT_NAME}
 RPMBUILD_ROOT=/var/lib/mock/${ROOT_NAME}/root/builddir/build
+if [[ "${THISDIR}" =~ /usr* ]] ; then
+  TEMPLATE_DIR=/usr/share/rapidpatch
+  DOC_DIR=/usr/share/doc/rapidpatch
+else
+  TEMPLATE_DIR="${THISDIR}"
+  DOC_DIR="${THISDIR}"
+fi
 
 usage() {
   prog_name=`basename $0`
-  cat ${THISDIR}/README.md
+  cat ${DOC_DIR}/README.md
   exit 1
 }
 
@@ -27,7 +34,7 @@ mock_init() {
   echo "About to generate new mock config for ${TOPIC_NAME} ..."
   echo -n "Are you OK with (re)creating /etc/mock/${ROOT_NAME}.cfg? (Y/N): "
   read answer ; [[ "${answer}" =~ ^[yY] ]] || return 1
-  sudo -A sh -c "sed -e 's/__DIST_VERSION__/${DIST_VERSION}/g' -e 's/__ROOT_NAME__/${ROOT_NAME}/g' ${THISDIR}/template-rapidpatch-x86_64.cfg >/etc/mock/${ROOT_NAME}.cfg"
+  sudo -A sh -c "sed -e 's/__DIST_VERSION__/${DIST_VERSION}/g' -e 's/__ROOT_NAME__/${ROOT_NAME}/g' ${TEMPLATE_DIR}/template-rapidpatch-x86_64.cfg >/etc/mock/${ROOT_NAME}.cfg"
 
   echo "About to create local repo ${LOCAL_REPO} to store local rpms for development ..."
   mkdir -p ${LOCAL_REPO}
@@ -156,6 +163,14 @@ generate_patch() {
   echo "Patch created as ${TOPIC_NAME}.patch"
 }
 
+show_mock_config() {
+  less "/etc/mock/${ROOT_NAME}.cfg"
+}
+
+get_mock_config() {
+  echo "/etc/mock/${ROOT_NAME}.cfg"
+}
+
 # print usage
 [ -z "${1}" -o "${1}" == "-h" -o "${1}" == "--help" ] && usage
 
@@ -174,7 +189,7 @@ else
   # run function according to the argument
   case "${1}" in
     mock_run|mock_shell|mock_pass|section_build|section_install|section_files) $@ ;;
-    run_check|update_spec|run_check_output|generate_patch) $@ ;;
+    run_check|update_spec|run_check_output|generate_patch|get_mock_config|show_mock_config) $@ ;;
     *) usage ;;
   esac
 fi

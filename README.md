@@ -27,6 +27,8 @@ Helper tool for creating patch for a package and check whether it compiles, that
                          in the current directory.
         update_spec      Copy locally changed SPEC to the mock buildroot.
         generate_patch   Get the changes in the source and store them into the <branch_name>.patch file.
+        get_mock_config  Shows which mock config file name the tool works with.
+        show_mock_config Shows mock config content the tool works with.
 
 ## Example:
 
