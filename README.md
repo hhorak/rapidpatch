@@ -17,6 +17,8 @@ Helper tool for creating patch for a package and check whether it compiles, that
                          part of the %build section can be run
         section_install [ --show [ <num> ] | --from <num> | complete ]
                          Similar semantics as section_build, just for %install section.
+        section_prep [ --show [ <num> ] | --from <num> | complete ]
+                         Similar semantics as section_build, just for %prep section.
         section_files    Run the %files section only.
         run_check <test_script>
                          Runs after-compile-check test, where user can check whatever is needed

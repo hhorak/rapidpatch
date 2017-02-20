@@ -1,11 +1,11 @@
 #!/bin/bash
 # reads input from stdin and returns required section given as argument
 # @param spec_file
-# @param section_wanted
-# @param action show-pure | show-from-line | show-with-lines
+# @param section_wanted (prep, build, or install)
+# @param action (show, or show-pure, default: show-pure)
 # @param (optional) line number
 get_spec_section() {
-  [ -z "${1}" ] && echo "Usage: get_spec_section <specfile> <build|install> <show|show-pure> [line_number]" && return 1
+  [ -z "${1}" ] && echo "Usage: get_spec_section <specfile> <prep|build|install> <show|show-pure> [line_number]" && return 1
   specfile=${1} ; shift
   section_wanted=${1} ; shift
   action=${1:-show-pure} ; shift
@@ -20,7 +20,10 @@ get_spec_section() {
       %install*)
         section_actual=install
         ;;
-      %description*|%package*|%prep*|%files*|%changelog*|%pre*|%post*|%trigger*)
+      %prep*)
+        section_actual=prep
+        ;;
+      %description*|%package*|%files*|%changelog*|%pre*|%post*|%trigger*)
         section_actual=ignore
         ;;
       *)

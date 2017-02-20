@@ -87,6 +87,10 @@ mock_run() {
   mock -r ${ROOT_NAME} --no-cleanup-after --no-clean --shell "cd /builddir/build/BUILD/${SOURCE_DIR_NAME}/ && ${1:-bash}"
 }
 
+section_prep() {
+  [ "${1}" == 'complete' -o -z "${1}" ] && _run_prep_section || _section_run prep $@
+}
+
 section_build() {
   [ "${1}" == 'complete' -o -z "${1}" ] && _run_build_section || _section_run build $@
 }
@@ -124,6 +128,11 @@ run_check() {
 # copies spec to the mock sources
 update_spec() {
   cp *.spec mock-sources/
+}
+
+# %prep and beyond
+_run_prep_section() {
+  mock -r ${ROOT_NAME} --no-cleanup-after --no-clean --shell 'rpmbuild -bp --short-circuit /builddir/build/SPECS/*.spec'
 }
 
 # %build and beyond
@@ -197,7 +206,7 @@ else
     mock_init)
       $@
       ;;
-    mock_run|mock_shell|mock_pass|section_build|section_install|section_files|run_check_output)
+    mock_run|mock_shell|mock_pass|section_prep|section_build|section_install|section_files|run_check_output)
       # in case the mock is already initialized, get the build directory
       # and safe the patch for the case we loose the environment
       generate_patch
