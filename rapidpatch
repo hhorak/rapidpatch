@@ -6,11 +6,6 @@ THISDIR=$(dirname ${BASH_SOURCE[0]})
 
 set -e
 
-TOPIC_NAME=${TOPIC_NAME:-`git rev-parse --abbrev-ref HEAD`}
-DIST_VERSION=25
-ROOT_NAME=${TOPIC_NAME}-${DIST_VERSION}-x86_64
-LOCAL_REPO=/var/tmp/${ROOT_NAME}
-RPMBUILD_ROOT=/var/lib/mock/${ROOT_NAME}/root/builddir/build
 if [[ "${THISDIR}" =~ /usr* ]] ; then
   TEMPLATE_DIR=/usr/share/rapidpatch
   DOC_DIR=/usr/share/doc/rapidpatch
@@ -25,6 +20,19 @@ usage() {
   exit 1
 }
 
+# print usage
+[ -z "${1}" -o "${1}" == "-h" -o "${1}" == "--help" ] && usage
+
+if ! git rev-parse --abbrev-ref HEAD &>/dev/null ; then
+  echo "The tool must be run within the dist-git directory."
+  exit 1
+fi
+
+TOPIC_NAME=${TOPIC_NAME:-`git rev-parse --abbrev-ref HEAD`}
+DIST_VERSION=25
+ROOT_NAME=${TOPIC_NAME}-${DIST_VERSION}-x86_64
+LOCAL_REPO=/var/tmp/${ROOT_NAME}
+RPMBUILD_ROOT=/var/lib/mock/${ROOT_NAME}/root/builddir/build
 
 # Create /etc/mock/${ROOT_NAME}.cfg
 # - change chroot
@@ -174,9 +182,6 @@ get_mock_config() {
 get_local_repo() {
   echo "${LOCAL_REPO}"
 }
-
-# print usage
-[ -z "${1}" -o "${1}" == "-h" -o "${1}" == "--help" ] && usage
 
 if [ -d ${RPMBUILD_ROOT}/BUILD ] ; then
   SOURCE_DIR_NAME=$(ls ${RPMBUILD_ROOT}/BUILD/ | head -n 1)

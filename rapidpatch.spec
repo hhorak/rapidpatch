@@ -1,6 +1,6 @@
 Name:		rapidpatch
 Version:	0.1
-Release:	3%{?dist}
+Release:	4%{?dist}
 Summary:	 Tools to make creating patch faster 
 
 Group:		Development/Tools
@@ -48,6 +48,9 @@ cp template-rapidpatch-x86_64.cfg %{buildroot}%{_datadir}/%{name}
 %{_datadir}/%{name}
 
 %changelog
+* Mon Feb 20 2017 Honza Horak <hhorak@redhat.com> - 0.1-4
+- Crash sanely in case not run in dist-git directory
+
 * Mon Feb 20 2017 Honza Horak <hhorak@redhat.com> - 0.1-3
 - Fix few packaging issues
 
